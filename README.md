@@ -1,12 +1,28 @@
-# React + Vite
+# BarGod.ai
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI-powered battle rap app: Generate bars with substance, simulate style clashes (e.g., Bigg K brevity vs. Illmac depth), gamify creation. Builds a culture repo from transcript uploads for dynamic themes/narratives.
 
-Currently, two official plugins are available:
+## Setup Instructions
+1. Clone the repo: `git clone https://github.com/Chrisrossi92/BarGod_ai.git`
+2. Install dependencies: `cd BarGod_ai` then `npm install`
+3. Add .env file with Supabase keys (SUPABASE_URL and SUPABASE_KEY).
+4. Run locally: `npm run dev`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+- Profiles: Carousel cards with flip animation, radar charts for stats.
+- Uploads: Analyze battle transcripts, update stats dynamically.
+- Simulator/Builder: Generate bars; expand with AI from culture repo.
+- Versus/Leaderboard: Competitive modes (to gamify).
 
-## Expanding the ESLint configuration
+## Brainstorm Notes (From Our Threads)
+- **Style Clashes:** Short/impactful (Bigg K) vs. narrative substance (Illmac/Pat Stay). Generate bars with "saying something" focus.
+- **Gamification:** Quick timers/streaks in Bar Builder, cypher circles, badges (e.g., "Mind-Fuck Master").
+- **Culture Repo:** Supabase table for themes/narratives from uploads; predict beefs, voice integration.
+- **Revolutionary Ideas:** AR cyphers, AI roasts in real-time.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Roadmap (To-Do)
+- Enhance analyzeTranscript for substance (narrative depth).
+- Gamify VersusMode with ELO ranks.
+- Test uploads with Illmac vs. Bigg K transcript.
+
+Questions? Discuss in Issues tab.
