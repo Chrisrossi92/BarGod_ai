@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+/* Custom styles – avoid @apply for built-ins in v4; use CSS vars or direct */
+.test-box {
+  background-color: var(--color-blue-500);
+  color: white;
+  padding: 1rem;
+  margin-top: 1rem;
+}
