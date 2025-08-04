@@ -1,0 +1,38 @@
+{
+  "punchline": {
+    "base": 40,
+    "primaryStat": "rhyming",
+    "multiplier": 0.5,
+    "description": "Hard-hitting line with direct impact. Ideal for landing damage and crowd pops."
+  },
+  "scheme": {
+    "base": 30,
+    "primaryStat": "creativity",
+    "multiplier": 0.6,
+    "description": "Multilayered wordplay or thematic run. Builds momentum for future bars."
+  },
+  "rebuttal": {
+    "base": 25,
+    "primaryStat": "rebuttals",
+    "multiplier": 0.8,
+    "description": "Responsive bar that flips the opponent’s last move. High risk, high reward."
+  },
+  "angle": {
+    "base": 35,
+    "primaryStat": "storytelling",
+    "multiplier": 0.7,
+    "description": "Narrative or personal approach. Effective for breaking down an opponent."
+  },
+  "freestyle": {
+    "base": 20,
+    "primaryStat": "presence",
+    "multiplier": 1.0,
+    "description": "Improvised move — unpredictable, slightly chaotic, but can shake the room if executed right."
+  },
+  "closer": {
+    "base": 45,
+    "primaryStat": "crowdControl",
+    "multiplier": 0.4,
+    "description": "High-energy ending line to leave a lasting impression. Ideal at end of round."
+  }
+}

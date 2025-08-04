@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+
+body {
+  @apply bg-black text-white font-sans antialiased;
+}
+
+/* Optional scroll handling */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+

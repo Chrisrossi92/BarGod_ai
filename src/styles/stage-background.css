@@ -1,0 +1,8 @@
+.stage-bg {
+  background: url('../assets/battle-stage.jpg') center center / cover no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  opacity: 0.15;
+}
