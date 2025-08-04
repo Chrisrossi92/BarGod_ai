@@ -8,7 +8,7 @@ import BuildCardWall from '../components/therise/BuildCardWall';
 import NextRivalBanner from '../components/therise/NextRivalBanner';
 import DailyQuestGrid from '../components/therise/DailyQuestGrid';
 import CareerTrophyCase from '../components/therise/CareerTrophyCase';
-import SocialTicker from '../components/therise/SocialTicker';
+import SocialTicker from '../components/home/SocialTicker';
 import BackgroundEnvironment from '../components/therise/BackgroundEnvironment';
 import BarGodLogo from '../components/BarGodLogo';
 

@@ -11,7 +11,7 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/therise" element={<TheRiseHub />} />
+        <Route path="/TheRiseHub" element={<TheRiseHub />} />
         <Route path="/therise/create" element={<CreateBuildScreen />} />
       </Routes>
     </Router>
