@@ -2,7 +2,16 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx}", // Tailwind needs this to detect dynamic class usage
+    "./src/**/*.{js,jsx}",
+  ],
+  safelist: [
+    'text-rhyme-0',
+    'text-rhyme-1',
+    'text-rhyme-2',
+    'text-rhyme-3',
+    'text-rhyme-4',
+    'text-rhyme-5',
+    'font-bold',
   ],
   theme: {
     extend: {
@@ -22,10 +31,19 @@ export default {
           },
         },
       },
+      colors: {
+        'rhyme-0': '#f87171', // red-400
+        'rhyme-1': '#facc15', // yellow-400
+        'rhyme-2': '#4ade80', // green-400
+        'rhyme-3': '#38bdf8', // sky-400
+        'rhyme-4': '#a78bfa', // purple-400
+        'rhyme-5': '#fb923c', // orange-400
+      }
     },
   },
   plugins: [],
 }
+
 
 
 
