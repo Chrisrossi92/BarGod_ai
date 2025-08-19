@@ -1,8 +1,8 @@
 // src/pages/BattlersPage.jsx
 
 import React from 'react';
-import BattlerGrid from '../components/battlers/BattlerGrid';
-import BattlerSearchBar from '../components/battlers/BattlerSearchBar';
+import BattlerGrid from '@/components/battlers/BattlerGrid';
+import BattlerSearchBar from '@/components/battlers/BattlerSearchBar';
 
 export default function BattlersPage() {
   return (

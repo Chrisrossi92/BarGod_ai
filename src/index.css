@@ -16,4 +16,8 @@ body {
   padding: 0;
 }
 
+/* src/index.css */
+[data-test="rhyme-preview"] .rh { font-weight: 700 !important; }
+
+
 

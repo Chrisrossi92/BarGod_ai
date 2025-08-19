@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import battleStage from '../assets/battle-stage.jpg';
-import BarGodLogo from '../components/BarGodLogo';
-import SocialTicker from '../components/home/SocialTicker';
+import battleStage from '@/assets/battle-stage.jpg';
+import BarGodLogo from '@/components/BarGodLogo';
+import SocialTicker from '@/components/home/SocialTicker';
 
 export default function Home() {
   return (

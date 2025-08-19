@@ -3,14 +3,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import PlayerStatsPanel from '../components/therise/PlayerStatsPanel';
-import BuildCardWall from '../components/therise/BuildCardWall';
-import NextRivalBanner from '../components/therise/NextRivalBanner';
-import DailyQuestGrid from '../components/therise/DailyQuestGrid';
-import CareerTrophyCase from '../components/therise/CareerTrophyCase';
-import SocialTicker from '../components/home/SocialTicker';
-import BackgroundEnvironment from '../components/therise/BackgroundEnvironment';
-import BarGodLogo from '../components/BarGodLogo';
+import PlayerStatsPanel from '@/components/therise/PlayerStatsPanel';
+import BuildCardWall from '@/components/therise/BuildCardWall';
+import NextRivalBanner from '@/components/therise/NextRivalBanner';
+import DailyQuestGrid from '@/components/therise/DailyQuestGrid';
+import CareerTrophyCase from '@/components/therise/CareerTrophyCase';
+import SocialTicker from '@/components/home/SocialTicker';
+import BackgroundEnvironment from '@/components/therise/BackgroundEnvironment';
+import BarGodLogo from '@/components/BarGodLogo';
 
 export default function TheRiseHub() {
   const navigate = useNavigate();

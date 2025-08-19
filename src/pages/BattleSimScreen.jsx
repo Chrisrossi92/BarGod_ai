@@ -1,8 +1,8 @@
 // src/pages/BattleSimScreen.jsx
 
 import React, { useState } from 'react';
-import { runTurn } from '../logic/TurnEngine';
-import BattleLog from '../components/BattleLog';
+import { runTurn } from '@/logic/TurnEngine';
+import BattleLog from '@/components/BattleLog';
 
 // Dummy battlers for demo
 const testBattlerA = {

@@ -1,7 +1,7 @@
 // src/pages/TheRiseScreen.jsx
 
 import React, { useState } from 'react';
-import BarGodLogo from '../components/BarGodLogo';
+import BarGodLogo from '@/components/BarGodLogo';
 
 const introEncounter = {
   id: 'intro01',

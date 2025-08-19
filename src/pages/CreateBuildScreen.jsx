@@ -4,12 +4,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-import AvatarCard from '../components/therise/avatar/AvatarCard';
-import ArchetypeSelector from '../components/therise/creator/ArchetypeSelector';
-import ArchetypePreview from '../components/therise/creator/ArchetypePreview';
-import HometownSelector from '../components/therise/hometown/HometownSelector';
-import MoveLoadoutSelector from '../components/therise/moves/MoveLoadoutSelector';
-import RiseBackButton from '../components/therise/RiseBackButton';
+import AvatarCard from '@/components/therise/avatar/AvatarCard';
+import ArchetypeSelector from '@/components/therise/creator/ArchetypeSelector';
+import ArchetypePreview from '@/components/therise/creator/ArchetypePreview';
+import HometownSelector from '@/components/therise/hometown/HometownSelector';
+import MoveLoadoutSelector from '@/components/therise/moves/MoveLoadoutSelector';
+import RiseBackButton from '@/components/therise/RiseBackButton';
 
 export default function CreateBuildScreen() {
   const navigate = useNavigate();
