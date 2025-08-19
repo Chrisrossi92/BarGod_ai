@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { fallbackPhonemes } from "../../config/fallbackPhonemes";
-import { saveFallbackOverride } from "../../lib/saveFallbackToStorage";
+import { fallbackPhonemes } from "@/config/fallbackPhonemes";
+import { saveFallbackOverride } from "@/lib/saveFallbackToStorage";
 
 export default function FallbackEditor() {
   const [word, setWord] = useState("");

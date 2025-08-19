@@ -1,7 +1,6 @@
 // src/pages/RecordingStudio.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-// RecordingStudio.jsx
 import TopBar from "@/components/TopBar";
 import Card from "@/components/common/Card";
 import Button from "@/components/common/Button";
