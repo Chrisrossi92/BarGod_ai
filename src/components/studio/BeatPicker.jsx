@@ -1,7 +1,7 @@
 // src/components/studio/BeatPicker.jsx
 import React, { useEffect, useId } from "react";
-import Card from "@/common/Card";
-import Button from "@/common/Button";
+import Card from "@/components/common/Card";
+import Button from "@/components/common/Button";
 
 export default function BeatPicker({ beatURL, beatName, onPick, onClear }) {
   const inputId = useId();
