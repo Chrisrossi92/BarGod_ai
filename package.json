@@ -15,6 +15,7 @@
     "@dicebear/adventurer": "^9.2.3",
     "@dicebear/collection": "^9.2.3",
     "@dicebear/core": "^9.2.3",
+    "@supabase/supabase-js": "^2.55.0",
     "aos": "^2.3.4",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.534.0",

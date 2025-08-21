@@ -38,15 +38,21 @@ export default function Home() {
           <p>Sharpen your bars, moves, and setups in a simulated lab.</p>
         </Link>
 
-        <div className="bg-zinc-900 p-6 rounded-xl text-center text-white shadow-md">
+        <Link
+          to="/simulate"
+          className="bg-zinc-900 p-6 rounded-xl text-center text-white shadow-md hover:bg-zinc-800 transition"
+        >
           <h2 className="text-lg font-bold mb-2 text-sky-400">Simulate Battles</h2>
           <p>Face off in AI matchups using your custom loadout.</p>
-        </div>
+        </Link>
 
-        <div className="bg-zinc-900 p-6 rounded-xl text-center text-white shadow-md">
+        <Link
+          to="/battlers"
+          className="bg-zinc-900 p-6 rounded-xl text-center text-white shadow-md hover:bg-zinc-800 transition"
+        >
           <h2 className="text-lg font-bold mb-2 text-purple-400">Browse Battlers</h2>
           <p>View top-tier builds, records, and stats from the culture.</p>
-        </div>
+        </Link>
 
         <div className="bg-zinc-900 p-6 rounded-xl text-center text-white shadow-md">
           <h2 className="text-lg font-bold mb-2 text-rose-400">Explore the Culture</h2>
@@ -61,6 +67,7 @@ export default function Home() {
     </div>
   );
 }
+
 
 
 
