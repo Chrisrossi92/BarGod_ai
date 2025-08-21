@@ -1,6 +1,6 @@
 import React from "react";
-import BarGodLogo from "@/BarGodLogo";
-import SubNavButton from "@/SubNavButton";
+import BarGodLogo from "@/components/BarGodLogo";
+import SubNavButton from "@/components/SubNavButton";
 import { ChevronLeft, BookOpenText, Mic, Home } from "lucide-react";
 
 /**

@@ -7,7 +7,7 @@ import Button from "@/components/common/Button";
 import BeatPicker from "@/components/studio/BeatPicker";
 import TakePlayer from "@/components/studio/TakePlayer";
 import RecorderControls from "@/components/studio/RecorderControls";
-import useRecorder from "@/hooks/useRecorder";
+import useRecorder from "../../hooks/useRecorder";
 import { getById, upsertTake } from "@/utils/myWorkStore";
 
 
@@ -105,17 +105,10 @@ export default function RecordingStudio() {
 
         {/* Recorder controls */}
         <div className="mt-4">
-          <RecorderControls
-            permission={rec.permission}
-            isRecording={rec.isRecording}
-            audioURL={rec.audioURL}
-            error={rec.error}
-            seconds={rec.seconds}
-            start={rec.start}
-            stop={rec.stop}
-            discard={rec.discard}
-            onDownload={downloadRecording}
-          />
+          + <RecorderControls rec={rec} onDownload={downloadRecording} />
+RecordingStudio
+
+
         </div>
 
         {/* Save row */}
