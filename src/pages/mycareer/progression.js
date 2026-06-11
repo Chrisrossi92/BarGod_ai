@@ -7,6 +7,7 @@ import {
   REGIONAL_OPPONENTS,
   STARTER_OPPONENTS,
 } from "@/logic/gameDesign";
+import gameStorage from "@/lib/storage/gameStorage";
 
 export const SELECTED_KEY = "bargod.mycareer.selectedBattlerId";
 export const PROGRESS_KEY = "bargod.mycareer.progress.v1";
@@ -104,19 +105,30 @@ export const CAREER_TIERS = [
     unlocksAfterTierId: "local-open-mic",
     opponents: REGIONAL_OPPONENTS,
   },
+  {
+    id: "city-circuit",
+    label: "City Circuit",
+    description: "A future tier for city-ranked names, bigger rooms, and title pressure.",
+    unlocksAfterTierId: "regional-circuit",
+    comingSoon: true,
+    rewardPreview: "Preview reward: City Circuit title path, higher XP payouts, and rare move unlocks.",
+    plannedOpponents: [
+      "Noir District",
+      "Civic Saint",
+      "Metro Myth",
+      "Harbor Phaze",
+      "Queen Ledger",
+    ],
+    opponents: [],
+  },
 ];
 
 export function readProgress() {
-  try {
-    const raw = localStorage.getItem(PROGRESS_KEY);
-    return normalizeProgress(raw ? JSON.parse(raw) : {});
-  } catch {
-    return normalizeProgress({});
-  }
+  return normalizeProgress(gameStorage.getJson(PROGRESS_KEY, {}));
 }
 
 export function writeProgress(progress) {
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  gameStorage.setJson(PROGRESS_KEY, progress);
 }
 
 export function getLevelFromXp(xp) {

@@ -23,7 +23,7 @@ export default function OpponentLadder({ progress, selectedOpponentId, onSelect 
 
       <div className="space-y-4">
         {CAREER_TIERS.map((tier) => {
-          const tierUnlocked = isTierUnlocked(tier.id, progress);
+          const tierUnlocked = !tier.comingSoon && isTierUnlocked(tier.id, progress);
           const defeatedCount = tier.opponents.filter((opponent) =>
             progress.defeatedOpponentIds.includes(opponent.id)
           ).length;
@@ -49,36 +49,68 @@ export default function OpponentLadder({ progress, selectedOpponentId, onSelect 
                 <div className="shrink-0 rounded-2xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-center">
                   <div className="text-[10px] uppercase text-zinc-500">Tier</div>
                   <div className="text-xs font-black uppercase text-zinc-200">
-                    {tierUnlocked ? `${defeatedCount}/${tier.opponents.length}` : "locked"}
+                    {tier.comingSoon
+                      ? "coming soon"
+                      : tierUnlocked
+                      ? `${defeatedCount}/${tier.opponents.length}`
+                      : "locked"}
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {tier.opponents.map((opponent, index) => {
-                  const status = getOpponentStatus(opponent.id, progress);
-                  const history = getOpponentHistory(progress, opponent.id);
-                  const rival = isOpponentRival(progress, opponent.id);
-                  const selected = opponent.id === selectedOpponentId;
-                  const locked = status === "locked";
+              {tier.comingSoon ? (
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
+                    <div className="text-xs font-black uppercase tracking-wide text-zinc-500">
+                      Planned Names
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {tier.plannedOpponents.map((name) => (
+                        <span
+                          key={name}
+                          className="rounded-full border border-zinc-700 bg-black px-3 py-2 text-xs font-black uppercase tracking-wide text-zinc-300"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-lime-400/30 bg-lime-400/10 p-3">
+                    <div className="text-xs font-black uppercase tracking-wide text-lime-300">
+                      Reward Preview
+                    </div>
+                    <div className="mt-1 text-sm leading-5 text-zinc-300">
+                      {tier.rewardPreview}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tier.opponents.map((opponent, index) => {
+                    const status = getOpponentStatus(opponent.id, progress);
+                    const history = getOpponentHistory(progress, opponent.id);
+                    const rival = isOpponentRival(progress, opponent.id);
+                    const selected = opponent.id === selectedOpponentId;
+                    const locked = status === "locked";
 
-                  return (
-                    <CollectibleOpponentCard
-                      key={opponent.id}
-                      opponent={opponent}
-                      battleNumber={index + 1}
-                      selected={selected}
-                      locked={locked}
-                      status={status}
-                      rival={rival}
-                      history={history}
-                      onSelect={onSelect}
-                    />
-                  );
-                })}
-              </div>
+                    return (
+                      <CollectibleOpponentCard
+                        key={opponent.id}
+                        opponent={opponent}
+                        battleNumber={index + 1}
+                        selected={selected}
+                        locked={locked}
+                        status={status}
+                        rival={rival}
+                        history={history}
+                        onSelect={onSelect}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
-              {!tierUnlocked && tier.unlocksAfterTierId && (
+              {!tier.comingSoon && !tierUnlocked && tier.unlocksAfterTierId && (
                 <div className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-400">
                   Clear Local Open Mic to unlock this circuit.
                 </div>

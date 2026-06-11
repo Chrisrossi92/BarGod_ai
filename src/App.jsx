@@ -21,7 +21,7 @@ import BottomNav from "@/components/navigation/BottomNav";
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen pb-[calc(78px+env(safe-area-inset-bottom))]">
+      <div className="min-h-screen pt-[env(safe-area-inset-top)] pb-[calc(78px+env(safe-area-inset-bottom))]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Home />} />

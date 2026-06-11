@@ -4,6 +4,7 @@ import { ArrowLeft, Flame, Mic2, Plus, Swords, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 
 import useBattlers from "@/lib/hooks/useBattlers";
+import gameStorage from "@/lib/storage/gameStorage";
 import { runTurn } from "@/logic/TurnEngine";
 import {
   ARCHETYPES,
@@ -391,14 +392,14 @@ export default function MyCareer() {
     latestTurn?.battlerA?.isSignatureMove || latestTurn?.battlerB?.isSignatureMove;
 
   useEffect(() => {
-    const storedId = localStorage.getItem(SELECTED_KEY);
+    const storedId = gameStorage.getItem(SELECTED_KEY);
     if (storedId) setSelectedId(storedId);
   }, []);
 
   useEffect(() => {
     if (!selectedId && builds.length > 0) {
       setSelectedId(builds[0].id);
-      localStorage.setItem(SELECTED_KEY, builds[0].id);
+      gameStorage.setItem(SELECTED_KEY, builds[0].id);
     }
   }, [builds, selectedId]);
 
@@ -443,7 +444,7 @@ export default function MyCareer() {
     setAwaitingNext(false);
     setUsedSignatureMoveIds([]);
     setCopyStatus("");
-    localStorage.setItem(SELECTED_KEY, id);
+    gameStorage.setItem(SELECTED_KEY, id);
   }
 
   function startBattle() {
