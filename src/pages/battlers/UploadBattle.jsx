@@ -1,275 +1,245 @@
+// src/pages/battlers/UploadBattle.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import supabase from "@/lib/supabaseClient";
+import Button from "@/components/common/Button";
 
-const box = { border: "1px solid #222", borderRadius: 12, background: "#0b0b0b", padding: 16 };
-const input = { width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #222", background: "#0f0f0f", color: "#fff" };
-const label = { fontSize: 12, opacity: 0.8, marginBottom: 6, display: "block" };
-const tabBtn = (active) => ({
-  padding: "8px 12px",
-  borderRadius: 10,
-  border: "1px solid " + (active ? "#b9ff66" : "#222"),
-  background: active ? "#b9ff66" : "#111",
-  color: active ? "#061700" : "#fff",
-  fontWeight: 800,
-  cursor: "pointer"
-});
+// Treat only RFC4122 UUIDs as valid; everything else ("0", "new", empty) is ignored
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function lazySupabase() {
-  try { return (await import("@/lib/supabaseClient")).default; }
-  catch { return (await import("../../lib/supabaseClient.js")).default; }
-}
+async function ensureBattlerId(maybeId, maybeName) {
+  const cleanedId = UUID_RE.test(maybeId || "") ? maybeId : null;
+  if (cleanedId) return { id: cleanedId, created: false };
 
-// Ensure a battler id exists:
-// - If id provided, return it
-// - Else if name provided, find by exact name (case-insensitive). If missing, create it.
-// Returns { id, created:boolean }
-async function ensureBattlerId(supabase, maybeId, maybeName) {
-  if (maybeId) return { id: maybeId, created: false };
   const name = (maybeName || "").trim();
   if (!name) return { id: null, created: false };
 
-  // Try to find by name (case-insensitive)
+  // Try to find existing by name (case-insensitive)
   const { data: existing, error: findErr } = await supabase
     .from("battlers")
     .select("id")
-    .ilike("name", name)   // ilike = case-insensitive equality pattern
+    .ilike("name", name)
     .limit(1)
     .maybeSingle();
-
   if (findErr) throw findErr;
   if (existing?.id) return { id: existing.id, created: false };
 
-  // Create new battler row
+  // Create a new minimal battler row (RLS must allow this insert)
   const { data: created, error: insErr } = await supabase
     .from("battlers")
     .insert([{ name }])
     .select("id")
     .single();
-
   if (insErr) throw insErr;
   return { id: created.id, created: true };
 }
 
 export default function UploadBattle() {
-  const { id } = useParams(); // optional battler id if coming from profile
   const nav = useNavigate();
+  const { id: routeIdRaw } = useParams();
+  const routeId = UUID_RE.test(routeIdRaw || "") ? routeIdRaw : null;
 
-  const [activeTab, setActiveTab] = useState("transcript"); // transcript | link
-  const [battlers, setBattlers] = useState([]);
-  const [loadingBattlers, setLoadingBattlers] = useState(true);
+  // UI state
+  const [activeTab, setActiveTab] = useState("transcript"); // "transcript" | "link"
+  const [linkType, setLinkType] = useState("video"); // meta hint: "video" | "link"
 
-  // mapping (either select an existing battler OR type a name)
-  const [battlerId, setBattlerId] = useState(id || "");
   const [battlerName, setBattlerName] = useState("");
-  const [opponentId, setOpponentId] = useState("");
   const [opponentName, setOpponentName] = useState("");
 
-  // transcript tab
-  const [text, setText] = useState("");
-  const [fileErr, setFileErr] = useState(null);
+  const [text, setText] = useState(""); // transcript text
+  const [url, setUrl] = useState("");   // link url
 
-  // link tab
-  const [linkType, setLinkType] = useState("youtube"); // youtube | genius
-  const [url, setUrl] = useState("");
-
-  // global
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
 
-  // load battlers for selects
+  // Prefill header context if a valid :id is present
+  const [routeBattler, setRouteBattler] = useState(null);
   useEffect(() => {
     let ignore = false;
     (async () => {
-      try {
-        setLoadingBattlers(true);
-        const supabase = await lazySupabase();
-        const { data, error } = await supabase
-          .from("battlers")
-          .select("id,name")
-          .order("name", { ascending: true });
-
-        if (ignore) return;
-        if (error) throw error;
-        setBattlers(data || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (!ignore) setLoadingBattlers(false);
-      }
+      if (!routeId) return;
+      const { data, error } = await supabase
+        .from("battlers")
+        .select("id,name,photo_url,bio,stats")
+        .eq("id", routeId)
+        .maybeSingle();
+      if (!ignore) setRouteBattler(error ? null : data);
     })();
     return () => { ignore = true; };
-  }, []);
+  }, [routeId]);
 
-  // read .txt files into the textarea
-  async function handleFile(e) {
-    setFileErr(null);
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.name.toLowerCase().endsWith(".txt")) {
-      setFileErr("Please pick a .txt file.");
-      return;
-    }
-    const content = await f.text();
-    setText(content);
-  }
-
+  // Simple validation
   const canSubmit = useMemo(() => {
-    if (activeTab === "transcript") {
-      if (!text.trim()) return false;
-    } else {
-      if (!url.trim()) return false;
-    }
-    if (!battlerId && !battlerName.trim()) return false; // must identify at least one battler
-    return true;
-  }, [activeTab, text, url, battlerId, battlerName]);
+    if (activeTab === "transcript") return text.trim().length > 0;
+    return /^https?:\/\//i.test(url.trim());
+  }, [activeTab, text, url]);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setErr(null);
+  async function onSubmit(e) {
+    e?.preventDefault();
     if (!canSubmit) return;
+    setLoading(true);
+    setErr(null);
 
-    setSaving(true);
     try {
-      const supabase = await lazySupabase();
-
-      // Ensure IDs exist (auto-create if name typed)
-      const ensuredA = await ensureBattlerId(supabase, battlerId, battlerName);
-      const ensuredB = await ensureBattlerId(supabase, opponentId, opponentName);
+      // Ensure battler/opponent IDs (create by name if needed)
+      const ensuredA = await ensureBattlerId(routeId, battlerName);
+      const ensuredB = await ensureBattlerId(null, opponentName);
 
       const payload = {
         type: activeTab === "transcript" ? "transcript" : linkType,
         payload_text: activeTab === "transcript" ? text : null,
         payload_url: activeTab === "transcript" ? null : url.trim(),
-
         battler_id: ensuredA.id,
-        battler_name: battlerName || null, // keep original for provenance
+        battler_name: battlerName || null, // store raw input for provenance
         opponent_id: ensuredB.id,
         opponent_name: opponentName || null,
-
-        status: "pending"
+        status: "pending",
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("uploads")
         .insert([payload])
         .select("id")
         .single();
-
       if (error) throw error;
 
-      // After creating battler(s), jump to main list for now
-      nav("/battlers?uploaded=1");
+      // Navigate back with success flag (BrowseBattlers reads ?uploaded=true)
+      nav("/battlers?uploaded=true");
     } catch (e) {
-      setErr(String(e.message || e));
+      setErr(e.message || "Upload failed");
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#000", color: "#fff", padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link to={id ? `/battlers/${id}` : "/battlers"} style={{ color: "#fff", textDecoration: "none", opacity: 0.8 }}>← Back</Link>
-        <h1 style={{ margin: 0, fontWeight: 800, fontSize: 20 }}>Upload Battle</h1>
-        <span />
-      </div>
+    <div className="min-h-screen bg-black text-white px-4 py-6 md:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-extrabold tracking-tight">Upload a Battle</h1>
+          <Link to="/battlers" className="text-zinc-300 hover:underline">Back to Browse</Link>
+        </header>
 
-      <form onSubmit={handleSubmit} style={{ marginTop: 16, ...box }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" style={tabBtn(activeTab === "transcript")} onClick={() => setActiveTab("transcript")}>
-            Transcript
-          </button>
-          <button type="button" style={tabBtn(activeTab !== "transcript")} onClick={() => setActiveTab("link")}>
-            Link
-          </button>
+        {routeBattler && (
+          <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 mb-4">
+            <div className="h-12 w-12 rounded-xl overflow-hidden bg-zinc-900 flex items-center justify-center">
+              {routeBattler.photo_url ? (
+                <img src={routeBattler.photo_url} alt={routeBattler.name} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xs opacity-70">No Img</span>
+              )}
+            </div>
+            <div>
+              <div className="text-sm opacity-70">Uploading for</div>
+              <div className="text-lg font-semibold">{routeBattler.name}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setActiveTab("transcript")}
+            className={`px-3 py-2 rounded-xl border text-sm font-bold ${
+              activeTab === "transcript"
+                ? "border-lime-400 bg-lime-400 text-black"
+                : "border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800"
+            }`}
+          >Transcript</button>
+          <button
+            onClick={() => setActiveTab("link")}
+            className={`px-3 py-2 rounded-xl border text-sm font-bold ${
+              activeTab === "link"
+                ? "border-lime-400 bg-lime-400 text-black"
+                : "border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800"
+            }`}
+          >Video / Link</button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
-          <div>
-            <label style={label}>Battler (choose existing OR type name)</label>
-            <select value={battlerId} onChange={(e) => setBattlerId(e.target.value)} style={{ ...input, marginBottom: 8 }}>
-              <option value="">— Select existing —</option>
-              {battlers.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-            <input placeholder="Or type battler name…" value={battlerName} onChange={(e) => setBattlerName(e.target.value)} style={input} />
+        {/* Form */}
+        <form onSubmit={onSubmit} className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 space-y-4">
+          {/* Names */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs opacity-80">Battler Name {routeId ? <>(preselected)</> : <>(or pick later)</>}</label>
+              <input
+                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                placeholder={routeId ? "(Optional — using selected ID)" : "e.g., Dizaster"}
+                value={battlerName}
+                onChange={(e) => setBattlerName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs opacity-80">Opponent Name (optional)</label>
+              <input
+                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                placeholder="e.g., Pat Stay"
+                value={opponentName}
+                onChange={(e) => setOpponentName(e.target.value)}
+              />
+            </div>
           </div>
-          <div>
-            <label style={label}>Opponent (optional)</label>
-            <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)} style={{ ...input, marginBottom: 8 }}>
-              <option value="">— Select existing —</option>
-              {battlers.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-            </select>
-            <input placeholder="Or type opponent name…" value={opponentName} onChange={(e) => setOpponentName(e.target.value)} style={input} />
-          </div>
-        </div>
 
-        <div style={{ marginTop: 16 }}>
           {activeTab === "transcript" ? (
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <label style={label}>Paste transcript</label>
-                <textarea
-                  rows={10}
-                  style={{ ...input, resize: "vertical", fontFamily: "ui-monospace, Menlo, Monaco, Consolas, 'Courier New', monospace" }}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="[Round 1: A] ...\n[Round 1: B] ..."
-                />
-              </div>
-              <div>
-                <label style={label}>Or upload .txt</label>
-                <input type="file" accept=".txt" onChange={handleFile} />
-                {fileErr && <div style={{ color: "#ffbfbf", marginTop: 6 }}>{fileErr}</div>}
-              </div>
+            <div>
+              <label className="text-xs opacity-80">Transcript Text *</label>
+              <textarea
+                className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                rows={10}
+                placeholder="Paste the battle transcript here…"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                required
+              />
             </div>
           ) : (
-            <div style={{ display: "grid", gap: 12 }}>
-              <div>
-                <label style={label}>Link type</label>
-                <select value={linkType} onChange={(e) => setLinkType(e.target.value)} style={input}>
-                  <option value="youtube">YouTube</option>
-                  <option value="genius">Genius</option>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <div className="sm:col-span-2">
+                <label className="text-xs opacity-80">Link Type</label>
+                <select
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  value={linkType}
+                  onChange={(e) => setLinkType(e.target.value)}
+                >
+                  <option value="video">Video</option>
+                  <option value="link">Link</option>
                 </select>
               </div>
-              <div>
-                <label style={label}>URL</label>
+              <div className="sm:col-span-3">
+                <label className="text-xs opacity-80">URL *</label>
                 <input
-                  style={input}
-                  placeholder={linkType === "youtube" ? "https://www.youtube.com/watch?v=..." : "https://genius.com/..."}
+                  className="mt-1 w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  placeholder="https://…"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
+                  required
                 />
               </div>
             </div>
           )}
-        </div>
 
-        {err && (
-          <div style={{ marginTop: 12, padding: 10, border: "1px solid #6b0000", borderRadius: 8, background: "#190000", color: "#ffbfbf" }}>
-            {err}
+          {err && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm">{String(err)}</div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Button type="submit" variant="primary" disabled={!canSubmit || loading}>
+              {loading ? "Saving…" : "Save Upload"}
+            </Button>
+            <Link to="/battlers" className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm hover:bg-zinc-800">
+              Cancel
+            </Link>
           </div>
-        )}
 
-        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <button
-            type="submit"
-            disabled={!canSubmit || saving}
-            style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #b9ff66", background: "#b9ff66", color: "#061700", fontWeight: 800, opacity: !canSubmit || saving ? 0.6 : 1 }}
-          >
-            {saving ? "Submitting…" : "Submit Upload"}
-          </button>
-          <Link to={id ? `/battlers/${id}` : "/battlers"} style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #222", background: "#111", color: "#fff", textDecoration: "none" }}>
-            Cancel
-          </Link>
-        </div>
-
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 10 }}>
-          v1: Your upload is saved. We auto-created battlers if needed. Next phase will parse and score.
-        </div>
-      </form>
+          <div className="text-xs opacity-60">
+            v1: We’ll auto-create battlers by name if they don’t exist yet. Owner-only edits coming next.
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
+
 
 
 

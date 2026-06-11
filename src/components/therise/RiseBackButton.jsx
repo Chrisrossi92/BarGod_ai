@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 
-export default function RiseBackButton({ to = '/therise' }) {
+export default function RiseBackButton({ to = '/therisehub' }) {
   const navigate = useNavigate();
 
   return (

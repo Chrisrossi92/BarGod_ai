@@ -25,7 +25,7 @@ export default function HometownSelector({ value, onChange }) {
 
       {selectedCity && (
         <div className="mt-2 text-sm text-gray-300">
-          <span className="font-bold text-white">{selectedCity.name}</span> — {selectedCity.bonus}
+          <span className="font-bold text-white">{selectedCity.name}</span> — {selectedCity.bonus?.label}
         </div>
       )}
     </div>

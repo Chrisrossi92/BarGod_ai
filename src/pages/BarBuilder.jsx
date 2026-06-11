@@ -1,5 +1,5 @@
 // src/pages/BarBuilder.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Shared header logo (clicks to "/")
@@ -9,9 +9,12 @@ import BarGodLogo from "@/components/BarGodLogo";
 import SyllableCounter from "@/components/barbuilder/SyllableCounter";
 import SaveStatus from "@/components/barbuilder/SaveStatus";
 import RhymeSettingsPanel from "@/components/barbuilder/RhymeSettingsPanel";
+import Card from "@/components/common/Card";
 
 // My Work (Vault) helpers
 import { getById, upsertLyric } from "@/utils/myWorkStore";
+
+const ENABLE_RHYME_HIGHLIGHT = true;
 
 /* ---------------- helpers: simple, reliable rhyme preview ---------------- */
 // Tail from last vowel to end (rough end-rhyme key)
@@ -22,6 +25,8 @@ function rhymeTail(word) {
 }
 
 function SimpleRhymePreview({ text }) {
+  if (!ENABLE_RHYME_HIGHLIGHT) return null;
+
   const lines = (text || "").split(/\r?\n/);
 
   // Collect last-word tails and counts
@@ -97,10 +102,20 @@ export default function BarBuilder() {
   const [bars, setBars] = useState("");         // main textarea content
   const [syllables, setSyllables] = useState(0);
   const [saved, setSaved] = useState(true);
+  const [rhymeResult, setRhymeResult] = useState(null);
+  const workerRef = useRef(null);
+  const debounceRef = useRef(null);
 
   // Settings (depth/internal toggle surfaced for future phoneme highlighter)
   const [depth, setDepth] = useState(2);
   const [internal, setInternal] = useState(false);
+  const highlightedText = useMemo(() => {
+    if (ENABLE_RHYME_HIGHLIGHT && rhymeResult?.lines) {
+      // TODO: render highlighted text based on worker output
+      return bars;
+    }
+    return bars;
+  }, [bars, rhymeResult]);
 
   // Load an existing lyric if ?open=id, else hydrate from local draft
   useEffect(() => {
@@ -143,6 +158,40 @@ export default function BarBuilder() {
     setSaved(false);
     return () => clearTimeout(t);
   }, [bars, title]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!ENABLE_RHYME_HIGHLIGHT) return;
+    const worker = new Worker(
+      new URL("../workers/rhymeWorker.js", import.meta.url),
+      { type: "module" }
+    );
+    workerRef.current = worker;
+    worker.onmessage = (event) => {
+      setRhymeResult(event.data);
+    };
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!ENABLE_RHYME_HIGHLIGHT) return;
+    if (!workerRef.current) return;
+
+    const text = bars || "";
+    const syllableDepth = depth || 2;
+    const multiDepth = 2;
+
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      workerRef.current?.postMessage({ text, depth: syllableDepth, multiDepth });
+    }, 150);
+
+    return () => {
+      clearTimeout(debounceRef.current);
+    };
+  }, [bars, depth]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-zinc-900 text-white">
@@ -188,6 +237,7 @@ export default function BarBuilder() {
           setDepth={setDepth}
           internal={internal}
           setInternal={setInternal}
+          enableInternal={ENABLE_RHYME_HIGHLIGHT}
         />
 
         <textarea
@@ -198,18 +248,95 @@ export default function BarBuilder() {
           className="w-full p-4 bg-zinc-800 border border-zinc-600 rounded-xl text-base resize-none focus:outline-none focus:ring-2 focus:ring-lime-400 shadow-md mb-4"
         />
 
-        {/* Rhyme preview */}
-        <div className="bg-zinc-800 p-4 mt-4 rounded-xl border border-zinc-700">
-          <h3 className="text-lime-300 font-semibold mb-2">Rhyme Highlighting</h3>
-          <p className="text-gray-300 text-sm mb-3">
-            Preview of detected end rhymes. (We’ll swap in the phoneme-based version next.)
-          </p>
-          <SimpleRhymePreview text={bars} />
-        </div>
+        {ENABLE_RHYME_HIGHLIGHT ? (
+          <Card className="mt-4">
+            <div className="text-lime-400 font-semibold mb-1">Rhyme Highlighting</div>
+            <div className="text-xs text-gray-400 mb-2">
+              Preview of detected end rhymes.
+            </div>
+            {rhymeResult && rhymeResult.lines.length > 0 ? (
+              <div className="text-sm mt-2 space-y-1">
+                {rhymeResult.lines.map((line) => {
+                  const { index, text, multiGroup, singleGroup } = line;
+                  const raw = text || "";
+                  const words = raw.split(" ");
+
+                  // Decide colors based on group
+                  let wordClass = "";
+                  if (multiGroup >= 0) {
+                    const colorIndex = multiGroup % 4;
+                    const colors = [
+                      "bg-amber-500/60 text-black",
+                      "bg-sky-500/60 text-black",
+                      "bg-emerald-500/60 text-black",
+                      "bg-fuchsia-500/60 text-black",
+                    ];
+                    wordClass = colors[colorIndex];
+                  } else if (singleGroup >= 0) {
+                    const colorIndex = singleGroup % 4;
+                    const colors = [
+                      "bg-amber-500/30 text-amber-50",
+                      "bg-sky-500/30 text-sky-50",
+                      "bg-emerald-500/30 text-emerald-50",
+                      "bg-fuchsia-500/30 text-fuchsia-50",
+                    ];
+                    wordClass = colors[colorIndex];
+                  }
+
+                  // How many trailing words to highlight: multis get more
+                  const highlightCount =
+                    multiGroup >= 0 ? Math.min(3, words.filter(Boolean).length) : 1;
+                  const lastIndex = words.length - 1;
+                  const startHighlightIndex = lastIndex - (highlightCount - 1);
+
+                  return (
+                    <div
+                      key={index}
+                      className="px-2 py-1 rounded border border-zinc-800 bg-zinc-900/40"
+                    >
+                      {words.map((w, i) => {
+                        const cleaned = w || "";
+                        const shouldHighlight =
+                          wordClass &&
+                          cleaned.trim().length > 0 &&
+                          i >= startHighlightIndex &&
+                          i <= lastIndex;
+
+                        return (
+                          <span key={i} className="mr-1">
+                            <span
+                              className={
+                                shouldHighlight
+                                  ? `inline-block px-1 rounded ${wordClass}`
+                                  : ""
+                              }
+                            >
+                              {cleaned || "\u00A0"}
+                            </span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500 mt-2">
+                Start writing above to see rhyme groups. Multis are shown with stronger color,
+                single end rhymes with softer color.
+              </div>
+            )}
+          </Card>
+        ) : (
+          <Card className="mt-4">
+            <div className="text-lime-400 font-semibold mb-1">Rhyme Highlighting</div>
+            <div className="text-xs text-gray-400">
+              We&apos;ve temporarily disabled this while we upgrade the engine.  
+              You can still write, count syllables, and save your work.
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
 }
-
-
-

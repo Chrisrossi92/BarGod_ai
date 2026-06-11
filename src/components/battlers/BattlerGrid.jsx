@@ -15,10 +15,10 @@ const dummyProfiles = [
       storytelling: 81,
       creativity: 90,
       crowdControl: 93,
-      presence: 92
+      presence: 92,
     },
     strengths: ['aggression', 'rebuttals', 'crowdControl'],
-    weaknesses: ['humor']
+    weaknesses: ['humor'],
   },
   {
     name: 'Pat Stay',
@@ -31,18 +31,45 @@ const dummyProfiles = [
       storytelling: 89,
       creativity: 92,
       crowdControl: 88,
-      presence: 93
+      presence: 93,
     },
     strengths: ['humor', 'presence', 'creativity'],
-    weaknesses: ['aggression']
-  }
+    weaknesses: ['aggression'],
+  },
 ];
 
-export default function BattlerGrid() {
+export default function BattlerGrid({ battlers, loading }) {
+  const data = typeof battlers === 'undefined' ? dummyProfiles : battlers;
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto text-center text-sm text-gray-400">
+        Loading battlers...
+      </div>
+    );
+  }
+
+  if (!data?.length) {
+    return (
+      <div className="max-w-6xl mx-auto text-center text-sm text-gray-400">
+        No battlers yet.
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      {dummyProfiles.map((profile, idx) => (
-        <StatCard key={idx} profile={profile} />
+      {data.map((profile, idx) => (
+        <StatCard
+          key={profile.id || idx}
+          profile={{
+            strengths: [],
+            weaknesses: [],
+            attributes: {},
+            ...profile,
+            attributes: profile.attributes || profile.stats || {},
+          }}
+        />
       ))}
     </div>
   );

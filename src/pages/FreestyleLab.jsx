@@ -7,12 +7,15 @@ import TakePlayer from "@/components/studio/TakePlayer";
 import RecorderControls from "@/components/studio/RecorderControls";
 import PromptDrill from "@/components/lab/PromptDrill";
 import useRecorder from "../../hooks/useRecorder";
+import { upsertTake } from "@/utils/myWorkStore";
 
 export default function FreestyleLab() {
   // meta
   const [mode, setMode] = useState("home"); // home | quick | drill
   const [beatURL, setBeatURL] = useState(null);
   const [beatName, setBeatName] = useState("");
+  const [title, setTitle] = useState("Freestyle Session");
+  const [savedMsg, setSavedMsg] = useState("");
 
   const rec = useRecorder();
 
@@ -38,6 +41,23 @@ export default function FreestyleLab() {
     a.href = rec.audioURL;
     a.download = `${mode === "drill" ? "drill" : "freestyle"}.webm`;
     a.click();
+  };
+
+  useEffect(() => {
+    setSavedMsg("");
+    if (mode === "quick") setTitle((t) => t || "Freestyle Session");
+    if (mode === "drill") setTitle((t) => t || "Prompt Drill");
+  }, [mode]);
+
+  const saveTake = () => {
+    const id = upsertTake({
+      title: title || (mode === "drill" ? "Prompt Drill" : "Quick Freestyle"),
+      duration: rec.seconds || 0,
+      beatName: beatName || "",
+    });
+    setSavedMsg("Saved!");
+    setTimeout(() => setSavedMsg(""), 1800);
+    return id;
   };
 
   return (
@@ -110,11 +130,25 @@ export default function FreestyleLab() {
               <TakePlayer audioURL={rec.audioURL} />
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <div>
+                <div className="text-sm text-gray-400 mb-1">Title</div>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Freestyle session"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                {savedMsg && <span className="text-xs text-lime-400">{savedMsg}</span>}
+                <Button onClick={saveTake}>Save to My Work</Button>
+                <Button onClick={download} disabled={!rec.audioURL}>Download</Button>
+              </div>
+            </div>
+
             {/* Recorder controls */}
             <RecorderControls rec={rec} />
-            <div className="flex items-center justify-end">
-              <Button onClick={download} disabled={!rec.audioURL}>Download</Button>
-            </div>
           </div>
         )}
 
@@ -137,8 +171,21 @@ export default function FreestyleLab() {
 
             {/* After drill ends, user can replay or download via TakePlayer */}
             <TakePlayer audioURL={rec.audioURL} />
-            <div className="flex items-center justify-end">
-              <Button onClick={download} disabled={!rec.audioURL}>Download</Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <div>
+                <div className="text-sm text-gray-400 mb-1">Title</div>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Prompt drill"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                {savedMsg && <span className="text-xs text-lime-400">{savedMsg}</span>}
+                <Button onClick={saveTake}>Save to My Work</Button>
+                <Button onClick={download} disabled={!rec.audioURL}>Download</Button>
+              </div>
             </div>
           </div>
         )}

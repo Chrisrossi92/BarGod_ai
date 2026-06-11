@@ -3,16 +3,28 @@
 import React, { useMemo } from 'react';
 import MoveCard from './MoveCard';
 import SelectedMovePanel from './SelectedMovePanel';
-import rawCatalog from '../../../logic/MoveCatalog.json';
+import { MOVE_LIST } from '@/logic/gameDesign';
 
 const MAX_MOVES = 4;
 
-const moveCatalog = Object.entries(rawCatalog).map(([name, data]) => ({
-  name,
-  ...data,
+const STAT_GROUP_LABELS = {
+  punches: 'Punches',
+  schemes: 'Schemes',
+  angles: 'Angles',
+  performance: 'Performance',
+  rebuttal: 'Rebuttal',
+  composure: 'Composure',
+};
+
+const moveCatalog = MOVE_LIST.map((move) => ({
+  ...move,
+  name: move.label,
+  type: STAT_GROUP_LABELS[move.primaryStat] || move.primaryStat,
 }));
 
 export default function MoveLoadoutSelector({ selectedMoves, setSelectedMoves }) {
+  const moves = Array.isArray(selectedMoves) ? selectedMoves : [];
+
   // Group moves by type
   const movesByType = useMemo(() => {
     const groups = {};
@@ -24,12 +36,12 @@ export default function MoveLoadoutSelector({ selectedMoves, setSelectedMoves })
   }, []);
 
   const handleSelect = (move) => {
-    const alreadySelected = selectedMoves.find((m) => m.name === move.name);
+    const alreadySelected = moves.find((m) => m.id === move.id || m.name === move.name);
 
     if (alreadySelected) {
       // Remove move
-      setSelectedMoves((prev) => prev.filter((m) => m.name !== move.name));
-    } else if (selectedMoves.length < MAX_MOVES) {
+      setSelectedMoves((prev) => prev.filter((m) => m.id !== move.id && m.name !== move.name));
+    } else if (moves.length < MAX_MOVES) {
       // Add move
       setSelectedMoves((prev) => [...prev, move]);
     }
@@ -43,7 +55,7 @@ export default function MoveLoadoutSelector({ selectedMoves, setSelectedMoves })
     <div className="bg-gray-900 p-6 rounded-xl shadow-xl">
       <h2 className="text-2xl font-bold text-lime-400 mb-4">Move Loadout</h2>
 
-      <SelectedMovePanel moves={selectedMoves} onRemove={handleSelect} onClear={handleClear} />
+      <SelectedMovePanel moves={moves} onRemove={handleSelect} onClear={handleClear} />
 
       <div className="mt-6 space-y-6">
         {Object.entries(movesByType).map(([type, moves]) => (
@@ -54,9 +66,9 @@ export default function MoveLoadoutSelector({ selectedMoves, setSelectedMoves })
                 <MoveCard
                   key={move.name}
                   move={move}
-                  selected={selectedMoves.some((m) => m.name === move.name)}
+                  selected={moves.some((m) => m.id === move.id || m.name === move.name)}
                   onClick={() => handleSelect(move)}
-                  disabled={selectedMoves.length >= MAX_MOVES && !selectedMoves.some((m) => m.name === move.name)}
+                  disabled={moves.length >= MAX_MOVES && !moves.some((m) => m.id === move.id || m.name === move.name)}
                 />
               ))}
             </div>

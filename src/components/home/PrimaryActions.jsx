@@ -9,7 +9,7 @@ export default function PrimaryActions() {
   return (
     <div className="flex flex-col gap-4 w-full max-w-xs mb-12">
       <button
-        onClick={() => navigate('/therise')}
+        onClick={() => navigate('/therisehub')}
         className="bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold py-3 rounded-lg shadow-lg hover:from-purple-700 hover:to-blue-700 transition duration-300"
       >
         The Rise
